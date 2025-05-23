@@ -25,7 +25,19 @@ SECRET_KEY = os.environ.get('DJANGO_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS for production
+# Get Render's external hostname from environment variable
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS = [RENDER_EXTERNAL_HOSTNAME]
+else:
+    # For local development (when DEBUG is True)
+    if DEBUG:
+        ALLOWED_HOSTS = ['.localhost', '127.0.0.1', '[::1]']
+    else:
+        # Fallback for production if RENDER_EXTERNAL_HOSTNAME is not set (should not happen on Render)
+        ALLOWED_HOSTS = [] # Or raise an error, or add your specific prod domain here
 
 
 # Application definition
