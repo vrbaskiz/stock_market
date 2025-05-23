@@ -2,6 +2,7 @@ import collections
 import time
 import threading
 import logging
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ class DataStore:
     _instance = None
     _lock = threading.Lock()
 
-    def __new__(cls, max_size=1000):
+    def __new__(cls):
         with cls._lock:
             if cls._instance is None:
                 cls._instance = super(DataStore, cls).__new__(cls)
@@ -51,10 +52,10 @@ class DataStore:
 
                 # Stores historical insights (significant price changes)
                 # This needs LRU/max_size as it's a growing list of events
-                cls._instance.insights = collections.deque(maxlen=max_size)
+                cls._instance.insights = collections.deque(maxlen=settings.MAX_STORE_SIZE)
                 cls._instance.insights_lock = threading.Lock()
-                cls._instance.max_size = max_size
-                logger.info(f"InMemoryStore initialized with insight max_size={max_size}")
+                cls._instance.max_size = settings.MAX_STORE_SIZE
+                logger.info(f"InMemoryStore initialized with insight max_size={settings.MAX_STORE_SIZE}")
             return cls._instance
 
     def update_data(self, symbol: str, data: dict):
@@ -63,7 +64,7 @@ class DataStore:
         """
         symbol = symbol.upper()
         with self.data_lock:
-            logger.info(f"INSIDE STORE data: {self.data}, instance {self} ")
+            logger.info(f"INSIDE STORE data: {self.data}, instance {self}")
             self.data[symbol] = data
             logger.debug(f"Updated data for {symbol}: {data}")
 
@@ -72,7 +73,7 @@ class DataStore:
         Retrieves the latest market data for a specific symbol or all data.
         """
         with self.data_lock:
-            logger.info(f"INSIDE STORE data: {self.data}, symbol: {symbol} instance {self} ")
+            logger.info(f"INSIDE STORE data: {self.data}, symbol: {symbol} instance {self}")
             if symbol:
                 a = dict(self.data.get(symbol.upper(), {}))
                 logger.info(f"returning data: {a}")
@@ -142,5 +143,3 @@ class DataStore:
 
         logger.debug(f"Retrieved {len(filtered)} insights (symbol={symbol}, from={from_timestamp}, to={to_timestamp}, limit={limit}, offset={offset})")
         return filtered
-
-data_store = DataStore()

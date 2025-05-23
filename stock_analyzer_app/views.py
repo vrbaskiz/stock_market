@@ -8,7 +8,7 @@ from drf_spectacular.utils import (
 )
 from django.conf import settings
 
-from stock_analyzer_app.store import data_store
+from stock_analyzer_app.store import DataStore
 from stock_analyzer_app.stock_manager import get_stock_manager
 
 logger = logging.getLogger(__name__)
@@ -41,11 +41,11 @@ logger = logging.getLogger(__name__)
 )
 @api_view(['GET'])
 def get_cached_market_data(request, symbol=None):
-    manager = get_stock_manager()
+    ds = DataStore()
     if symbol:
-        data = data_store.get_data(symbol)
-        logger.info(f"All market data: {data}, instance {data_store} ")
-        logger.info(f"All market data: {data_store.data}, instance {data_store} ")
+        data = ds.get_data(symbol)
+        logger.info(f"All market data: {data}, instance {ds} ")
+        logger.info(f"All market data: {ds.data}, instance {ds} ")
         if data:
             return Response(
                 data={
@@ -60,8 +60,8 @@ def get_cached_market_data(request, symbol=None):
                 status=status.HTTP_404_NOT_FOUND
             )
     else:
-        all_data = data_store.get_data()
-        logger.info(f"All market data: {all_data}, instance {data_store} ")
+        all_data = ds.get_data()
+        logger.info(f"All market data: {all_data}, instance {ds} ")
         return Response(
             data={'all_market_data': all_data},
             status=status.HTTP_200_OK
@@ -121,8 +121,6 @@ def get_cached_market_data(request, symbol=None):
 )
 @api_view(['GET'])
 def get_all_stock_insights(request): # No 'symbol' parameter in signature
-    manager = get_stock_manager() # Ensure manager is running
-
     # Parse query parameters
     from_timestamp = request.query_params.get('from_timestamp')
     to_timestamp = request.query_params.get('to_timestamp')
@@ -145,7 +143,7 @@ def get_all_stock_insights(request): # No 'symbol' parameter in signature
         )
 
     # Get filtered and paginated insights from the store (symbol=None for all)
-    filtered_insights = data_store.get_filtered_insights(
+    filtered_insights = DataStore().get_filtered_insights(
         symbol=None, # Explicitly pass None for symbol
         from_timestamp=from_timestamp,
         to_timestamp=to_timestamp,
@@ -251,7 +249,7 @@ def get_symbol_stock_insights(request, symbol):
         )
 
     # Get filtered and paginated insights for the specific symbol
-    filtered_insights = data_store.get_filtered_insights(
+    filtered_insights = DataStore().get_filtered_insights(
         symbol=symbol, # Pass the symbol from the path
         from_timestamp=from_timestamp,
         to_timestamp=to_timestamp,

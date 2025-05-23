@@ -5,7 +5,7 @@ import ssl
 import logging
 
 from django.conf import settings
-from stock_analyzer_app.store import data_store, Insight
+from stock_analyzer_app.store import DataStore, Insight
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +96,7 @@ class StockManager:
         """
         for trade_data_item in data.get('data', []):
             symbol = trade_data_item.get('s')
+            ds = DataStore()
             if symbol and symbol.upper() in self.stocks_to_analyze:
                 # Finnhub trade data structure
                 trade_info = {
@@ -104,8 +105,8 @@ class StockManager:
                     "timestamp": trade_data_item.get('t'),
                     "exchange": trade_data_item.get('x', 'N/A'),
                 }
-                logger.info(f"DATA STORE instance {data_store} ")
-                last_data = data_store.get_data(symbol)
+                logger.info(f"DATA STORE instance {ds} ")
+                last_data = ds.get_data(symbol)
 
                 last_price = last_data.get('data', {}).get('price', None)
                 current_price = trade_info['price']
@@ -115,7 +116,7 @@ class StockManager:
                     f"Price={current_price}, LastPrice={last_price}"
                 )
                 # Update the data store with the latest trade info
-                data_store.update_data(
+                ds.update_data(
                     symbol, {'type': 'trade', 'data': trade_info}
                 )
                 # If there is last_price to calculate change
@@ -144,7 +145,7 @@ class StockManager:
                             message=f"Significant price {inf} of "
                                     f"{abs(pct_change):.2f}%"
                         )
-                        data_store.add_insight(insight_obj)
+                        ds.add_insight(insight_obj)
                         logger.info(
                             f"[{symbol}] {insight_obj.message} "
                             f"(Old: {last_price}, New: {current_price})"
