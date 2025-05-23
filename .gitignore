@@ -1,0 +1,28 @@
+# .gitignore
+# Operating System files
+.DS_Store
+.env
+
+# Python
+*.pyc
+__pycache__/
+venv/
+env/
+/.venv/
+.pytest_cache/
+.coverage
+.mypy_cache/
+
+# Django
+/db.sqlite3
+media/
+
+# IDEs
+/.idea/
+.vscode/
+
+# Build artifacts
+dist/
+build/
+/stock_market.iml
+

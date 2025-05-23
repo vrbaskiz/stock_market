@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Data & Insights API Tester</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for better aesthetics */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for preformatted JSON output */
+        pre {
+            white-space: pre-wrap; /* Ensures text wraps within the pre block */
+            word-wrap: break-word; /* Breaks long words */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 sm:p-6 lg:p-8">
+<div class="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-4xl">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6 text-center">
+        Finnhub Market Data & Insights API Tester
+    </h1>
+    <p class="text-gray-600 text-center mb-8">
+        Interact with your Django REST API for Finnhub real-time market data and analysis insights.
+    </p>
+
+    <div class="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Market Data</h2>
+        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
+            <input type="text" id="marketDataSymbol" placeholder="Enter Symbol (e.g., AAPL)"
+                   class="flex-grow p-2 sm:p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 w-full sm:w-auto">
+            <button id="getAllMarketDataBtn"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-md shadow-md transition duration-300 w-full sm:w-auto">
+                Get All Market Data
+            </button>
+            <button id="getSymbolMarketDataBtn"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-md shadow-md transition duration-300 w-full sm:w-auto">
+                Get Symbol Market Data
+            </button>
+        </div>
+    </div>
+
+    <div class="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Analysis Insights</h2>
+        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
+            <input type="text" id="insightsSymbol" placeholder="Enter Symbol (e.g., AMZN)"
+                   class="flex-grow p-2 sm:p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition duration-200 w-full sm:w-auto">
+            <button id="getAllInsightsBtn"
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-md shadow-md transition duration-300 w-full sm:w-auto">
+                Get All Insights
+            </button>
+            <button id="getSymbolInsightsBtn"
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-md shadow-md transition duration-300 w-full sm:w-auto">
+                Get Symbol Insights
+            </button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+            <div>
+                <label for="fromTimestamp" class="block text-sm font-medium text-gray-700">From Timestamp (ms)</label>
+                <input type="number" id="fromTimestamp" placeholder="e.g., 1678886000000"
+                       class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+            </div>
+            <div>
+                <label for="toTimestamp" class="block text-sm font-medium text-gray-700">To Timestamp (ms)</label>
+                <input type="number" id="toTimestamp" placeholder="e.g., 1678887000000"
+                       class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+            </div>
+            <div>
+                <label for="limit" class="block text-sm font-medium text-gray-700">Limit</label>
+                <input type="number" id="limit" placeholder="e.g., 10"
+                       class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+            </div>
+            <div>
+                <label for="offset" class="block text-sm font-medium text-gray-700">Offset</label>
+                <input type="number" id="offset" placeholder="e.g., 0"
+                       class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-gray-800 text-white p-4 rounded-lg shadow-inner overflow-x-auto">
+        <h2 class="text-xl font-semibold mb-2">API Response:</h2>
+        <pre id="apiResponse" class="text-sm font-mono"></pre>
+        <div id="errorMessage" class="text-red-400 text-sm mt-2 hidden"></div>
+    </div>
+</div>
+
+<script>
+    const API_BASE_URL = `${window.location.protocol}//${window.location.host}`;
+
+    const marketDataSymbolInput = document.getElementById('marketDataSymbol');
+    const getAllMarketDataBtn = document.getElementById('getAllMarketDataBtn');
+    const getSymbolMarketDataBtn = document.getElementById('getSymbolMarketDataBtn');
+
+    const insightsSymbolInput = document.getElementById('insightsSymbol');
+    const getAllInsightsBtn = document.getElementById('getAllInsightsBtn');
+    const getSymbolInsightsBtn = document.getElementById('getSymbolInsightsBtn');
+
+    // NEW: Filtering and Pagination Inputs
+    const fromTimestampInput = document.getElementById('fromTimestamp');
+    const toTimestampInput = document.getElementById('toTimestamp');
+    const limitInput = document.getElementById('limit');
+    const offsetInput = document.getElementById('offset');
+
+    const apiResponsePre = document.getElementById('apiResponse');
+    const errorMessageDiv = document.getElementById('errorMessage');
+
+    /**
+     * Clears previous results and error messages.
+     */
+    function clearResults() {
+        apiResponsePre.textContent = 'Loading...';
+        errorMessageDiv.textContent = '';
+        errorMessageDiv.classList.add('hidden');
+    }
+
+    /**
+     * Displays the API response or an error.
+     * @param {Object|string} data - The data to display.
+     * @param {boolean} isError - True if the data is an error message.
+     * @param {HTMLElement} targetElement - The element to display the message in.
+     * @param {HTMLElement} errorElement - The error message element.
+     */
+    function displayResult(data, isError = false, targetElement, errorElement) {
+        if (isError) {
+            errorElement.textContent = data;
+            errorElement.classList.remove('hidden');
+            if (targetElement) targetElement.textContent = '';
+        } else {
+            if (targetElement) targetElement.textContent = JSON.stringify(data, null, 2);
+            errorElement.classList.add('hidden');
+        }
+    }
+
+    /**
+     * Makes a fetch request to the specified URL.
+     * @param {string} url - The API endpoint URL.
+     * @param {HTMLElement} targetElement - Element to display JSON response.
+     * @param {HTMLElement} errorElement - Element to display error messages.
+     */
+    async function fetchData(url, targetElement, errorElement) {
+        displayResult('Loading...', false, targetElement, errorElement); // Show loading state
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (!response.ok) {
+                displayResult(`Error ${response.status}: ${data.error || JSON.stringify(data)}`, true, targetElement, errorElement);
+            } else {
+                displayResult(data, false, targetElement, errorElement);
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            displayResult(`Network error or API is unreachable: ${error.message}`, true, targetElement, errorElement);
+        }
+    }
+
+    // Event Listeners for Market Data
+    getAllMarketDataBtn.addEventListener('click', () => {
+        clearResults();
+        fetchData(`${API_BASE_URL}/market-data/`, apiResponsePre, errorMessageDiv);
+    });
+
+    getSymbolMarketDataBtn.addEventListener('click', () => {
+        const symbol = marketDataSymbolInput.value.trim();
+        if (symbol) {
+            clearResults();
+            fetchData(`${API_BASE_URL}/market-data/${symbol}/`, apiResponsePre, errorMessageDiv);
+        } else {
+            displayResult("Please enter a symbol for Market Data query.", true, apiResponsePre, errorMessageDiv);
+        }
+    });
+
+    // Event Listeners for Insights
+    getAllInsightsBtn.addEventListener('click', () => {
+        clearResults();
+        let url = `${API_BASE_URL}/insights/`;
+        const params = new URLSearchParams();
+
+        if (fromTimestampInput.value) params.append('from_timestamp', fromTimestampInput.value);
+        if (toTimestampInput.value) params.append('to_timestamp', toTimestampInput.value);
+        if (limitInput.value) params.append('limit', limitInput.value);
+        if (offsetInput.value) params.append('offset', offsetInput.value);
+
+        if (params.toString()) {
+            url += `?${params.toString()}`;
+        }
+        fetchData(url, apiResponsePre, errorMessageDiv);
+    });
+
+    getSymbolInsightsBtn.addEventListener('click', () => {
+        const symbol = insightsSymbolInput.value.trim();
+        if (symbol) {
+            clearResults();
+            let url = `${API_BASE_URL}/insights/${symbol}/`;
+            const params = new URLSearchParams();
+
+            if (fromTimestampInput.value) params.append('from_timestamp', fromTimestampInput.value);
+            if (toTimestampInput.value) params.append('to_timestamp', toTimestampInput.value);
+            if (limitInput.value) params.append('limit', limitInput.value);
+            if (offsetInput.value) params.append('offset', offsetInput.value);
+
+            if (params.toString()) {
+                url += `?${params.toString()}`;
+            }
+            fetchData(url, apiResponsePre, errorMessageDiv);
+        } else {
+            displayResult("Please enter a symbol for Insights query.", true, apiResponsePre, errorMessageDiv);
+        }
+    });
+</script>
+</body>
+</html>
