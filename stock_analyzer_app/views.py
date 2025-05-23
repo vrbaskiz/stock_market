@@ -44,6 +44,8 @@ def get_cached_market_data(request, symbol=None):
     manager = get_stock_manager()
     if symbol:
         data = data_store.get_data(symbol)
+        logger.info(f"All market data: {data}, instance {data_store} ")
+        logger.info(f"All market data: {data_store.data}, instance {data_store} ")
         if data:
             return Response(
                 data={
