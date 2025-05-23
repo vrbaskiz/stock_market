@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -10,7 +11,7 @@ from django.conf import settings
 from stock_analyzer_app.store import data_store
 from stock_analyzer_app.stock_manager import get_stock_manager
 
-
+logger = logging.getLogger(__name__)
 # API View for Market Data
 @extend_schema(
     summary="Retrieve cached real-time market data (Trades/Quotes)",
@@ -58,6 +59,7 @@ def get_cached_market_data(request, symbol=None):
             )
     else:
         all_data = data_store.get_data()
+        logger.info(f"All market data: {all_data}, instance {data_store} ")
         return Response(
             data={'all_market_data': all_data},
             status=status.HTTP_200_OK

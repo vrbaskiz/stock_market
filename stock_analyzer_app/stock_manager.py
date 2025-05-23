@@ -104,8 +104,9 @@ class StockManager:
                     "timestamp": trade_data_item.get('t'),
                     "exchange": trade_data_item.get('x', 'N/A'),
                 }
+                logger.info(f"DATA STORE instance {data_store} ")
                 last_data = data_store.get_data(symbol)
-                print(last_data)
+
                 last_price = last_data.get('data', {}).get('price', None)
                 current_price = trade_info['price']
 
