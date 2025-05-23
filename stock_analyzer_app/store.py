@@ -64,7 +64,7 @@ class DataStore:
         symbol = symbol.upper()
         with self.data_lock:
             self.data[symbol] = data
-            # logger.debug(f"Updated data for {symbol}: {data}") # Re-enable if needed for debugging
+            logger.debug(f"Updated data for {symbol}: {data}")
 
     def get_data(self, symbol: str = None):
         """
@@ -94,8 +94,13 @@ class DataStore:
         """
         with self.insights_lock:
             self.insights.append(insight)
+            logger.info(
+                f"DataStore: Added insight for {insight.symbol}. "
+                f"Current insights count: {len(self.insights)}"
+            )
 
-    def get_filtered_insights(
+
+def get_filtered_insights(
             self,
             symbol: str = None,
             from_timestamp: int = None,
