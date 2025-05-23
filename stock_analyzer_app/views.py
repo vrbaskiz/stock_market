@@ -11,7 +11,6 @@ from django.conf import settings
 from stock_analyzer_app.store import DataStore
 from stock_analyzer_app.stock_manager import get_stock_manager
 
-logger = logging.getLogger(__name__)
 # API View for Market Data
 @extend_schema(
     summary="Retrieve cached real-time market data (Trades/Quotes)",
@@ -41,12 +40,13 @@ logger = logging.getLogger(__name__)
 )
 @api_view(['GET'])
 def get_cached_market_data(request, symbol=None):
+    # a weird fix for deployable single process worker since we are using
+    # in memory storage and not external
     get_stock_manager()
+
     ds = DataStore()
     if symbol:
         data = ds.get_data(symbol)
-        logger.info(f"All market data: {data}, instance {ds} ")
-        logger.info(f"All market data: {ds.data}, instance {ds} ")
         if data:
             return Response(
                 data={
@@ -62,7 +62,6 @@ def get_cached_market_data(request, symbol=None):
             )
     else:
         all_data = ds.get_data()
-        logger.info(f"All market data: {all_data}, instance {ds} ")
         return Response(
             data={'all_market_data': all_data},
             status=status.HTTP_200_OK
@@ -121,8 +120,11 @@ def get_cached_market_data(request, symbol=None):
     }
 )
 @api_view(['GET'])
-def get_all_stock_insights(request): # No 'symbol' parameter in signature
+def get_all_stock_insights(request):
+    # a weird fix for deployable single process worker since we are using
+    # in memory storage and not external
     get_stock_manager()
+
     # Parse query parameters
     from_timestamp = request.query_params.get('from_timestamp')
     to_timestamp = request.query_params.get('to_timestamp')
@@ -146,7 +148,7 @@ def get_all_stock_insights(request): # No 'symbol' parameter in signature
 
     # Get filtered and paginated insights from the store (symbol=None for all)
     filtered_insights = DataStore().get_filtered_insights(
-        symbol=None, # Explicitly pass None for symbol
+        symbol=None,
         from_timestamp=from_timestamp,
         to_timestamp=to_timestamp,
         limit=limit,
@@ -221,7 +223,7 @@ def get_all_stock_insights(request): # No 'symbol' parameter in signature
 )
 @api_view(['GET'])
 def get_symbol_stock_insights(request, symbol):
-    get_stock_manager()
+
     """
     API View for retrieving significant stock price change insights for a
     specific symbol. This view allows filtering by timestamp, range and
@@ -231,6 +233,10 @@ def get_symbol_stock_insights(request, symbol):
     :param symbol: The stock ticker symbol (GOOGL, AMZN, MSFT) for which to
                     retrieve insights.
     """
+    # a weird fix for deployable single process worker since we are using
+    # in memory storage and not external
+    get_stock_manager()
+
     # Parse query parameters
     from_timestamp = request.query_params.get('from_timestamp')
     to_timestamp = request.query_params.get('to_timestamp')

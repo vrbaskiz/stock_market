@@ -45,6 +45,7 @@ class DataStore:
     def __new__(cls):
         with cls._lock:
             if cls._instance is None:
+                logger.info(f"Initializing DataStore...({cls._instance})")
                 cls._instance = super(DataStore, cls).__new__(cls)
                 # Stores latest market data (trades) for each symbol
                 cls._instance.data = {}
@@ -55,7 +56,8 @@ class DataStore:
                 cls._instance.insights = collections.deque(maxlen=settings.MAX_STORE_SIZE)
                 cls._instance.insights_lock = threading.Lock()
                 cls._instance.max_size = settings.MAX_STORE_SIZE
-                logger.info(f"InMemoryStore initialized with insight max_size={settings.MAX_STORE_SIZE}")
+                logger.info(
+                    f"DataStore initialized ({cls._instance})")
             return cls._instance
 
     def update_data(self, symbol: str, data: dict):
@@ -64,23 +66,16 @@ class DataStore:
         """
         symbol = symbol.upper()
         with self.data_lock:
-            logger.info(f"INSIDE STORE data: {self.data}, instance {self}")
             self.data[symbol] = data
-            logger.debug(f"Updated data for {symbol}: {data}")
 
     def get_data(self, symbol: str = None):
         """
         Retrieves the latest market data for a specific symbol or all data.
         """
         with self.data_lock:
-            logger.info(f"INSIDE STORE data: {self.data}, symbol: {symbol} instance {self}")
             if symbol:
-                a = dict(self.data.get(symbol.upper(), {}))
-                logger.info(f"returning data: {a}")
-                return a
-            a = dict(self.data)
-            logger.info(f"returning data: {a}")
-            return a # Return a copy of all data
+                return self.data.get(symbol.upper(), {})
+            return dict(self.data) # Return a copy of all data
 
     def get_last_price(self, symbol: str) -> dict | None:
         """
@@ -141,5 +136,9 @@ class DataStore:
         if limit:
             filtered = filtered[:limit]
 
-        logger.debug(f"Retrieved {len(filtered)} insights (symbol={symbol}, from={from_timestamp}, to={to_timestamp}, limit={limit}, offset={offset})")
+        logger.debug(
+            f"Retrieved {len(filtered)} insights "
+            f"(symbol={symbol}, from={from_timestamp}, to={to_timestamp}, "
+            f"limit={limit}, offset={offset})"
+        )
         return filtered

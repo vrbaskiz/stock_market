@@ -105,16 +105,11 @@ class StockManager:
                     "timestamp": trade_data_item.get('t'),
                     "exchange": trade_data_item.get('x', 'N/A'),
                 }
-                logger.info(f"DATA STORE instance {ds} ")
                 last_data = ds.get_data(symbol)
 
                 last_price = last_data.get('data', {}).get('price', None)
                 current_price = trade_info['price']
 
-                logger.debug(
-                    f"[{symbol}] Received trade: "
-                    f"Price={current_price}, LastPrice={last_price}"
-                )
                 # Update the data store with the latest trade info
                 ds.update_data(
                     symbol, {'type': 'trade', 'data': trade_info}
