@@ -72,10 +72,14 @@ class DataStore:
         Retrieves the latest market data for a specific symbol or all data.
         """
         with self.data_lock:
+            logger.info(f"INSIDE STORE data: {self.data}, symbol: {symbol} instance {self} ")
             if symbol:
-                logger.info(f"INSIDE STORE data: {self.data}, instance {self} ")
-                return self.data.get(symbol.upper(), {})
-            return dict(self.data) # Return a copy of all data
+                a = dict(self.data.get(symbol.upper(), {}))
+                logger.info(f"returning data: {a}")
+                return a
+            a = dict(self.data)
+            logger.info(f"returning data: {a}")
+            return a # Return a copy of all data
 
     def get_last_price(self, symbol: str) -> dict | None:
         """
