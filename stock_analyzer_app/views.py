@@ -1,5 +1,6 @@
 import logging
 from django.shortcuts import render
+from django.views.generic import TemplateView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -278,6 +279,18 @@ def api_tester_page(request):
     """
     Renders the HTML page for interactively testing the REST API.
     """
+    # a weird fix for deployable single process worker since we are using
+    # in memory storage and not external
+    get_stock_manager()
     get_stock_manager()
     # No context needed for this simple static page
     return render(request, 'api_tester.html', {})
+
+def index_page(request):
+    """
+    Renders the index page of the application.
+    """
+    # a weird fix for deployable single process worker since we are using
+    # in memory storage and not external
+    get_stock_manager()
+    return render(request, 'index.html', {})

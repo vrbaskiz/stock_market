@@ -62,4 +62,5 @@ urlpatterns = [
         view=views.api_tester_page,
         name='api_tester_page'
     ),
+    path('', views.index_page, name='index_page')
 ]
