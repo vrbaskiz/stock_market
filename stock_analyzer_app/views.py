@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 )
 @api_view(['GET'])
 def get_cached_market_data(request, symbol=None):
+    get_stock_manager()
     ds = DataStore()
     if symbol:
         data = ds.get_data(symbol)
@@ -121,6 +122,7 @@ def get_cached_market_data(request, symbol=None):
 )
 @api_view(['GET'])
 def get_all_stock_insights(request): # No 'symbol' parameter in signature
+    get_stock_manager()
     # Parse query parameters
     from_timestamp = request.query_params.get('from_timestamp')
     to_timestamp = request.query_params.get('to_timestamp')
@@ -219,6 +221,7 @@ def get_all_stock_insights(request): # No 'symbol' parameter in signature
 )
 @api_view(['GET'])
 def get_symbol_stock_insights(request, symbol):
+    get_stock_manager()
     """
     API View for retrieving significant stock price change insights for a
     specific symbol. This view allows filtering by timestamp, range and
@@ -269,5 +272,6 @@ def api_tester_page(request):
     """
     Renders the HTML page for interactively testing the REST API.
     """
+    get_stock_manager()
     # No context needed for this simple static page
     return render(request, 'api_tester.html', {})
