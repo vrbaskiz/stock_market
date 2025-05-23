@@ -90,10 +90,10 @@ The server will typically run on http://127.0.0.1:8000/.
 
 * Get All Latest Market Data:
     * GET /market-data/
-    * Retrieves the latest trade/quote data for all symbols currently in the in-memory cache.
+    * Retrieves the latest trade data for all symbols currently in the in-memory cache.
 * Get Latest Market Data for a Specific Symbol:
     * GET /market-data/<str:symbol>/
-    * Retrieves the latest trade/quote data for the specified stock symbol (e.g., /api/market-data/AAPL/).
+    * Retrieves the latest trade data for the specified stock symbol (e.g., /api/market-data/AAPL/).
 
 ## Analysis Insights
 

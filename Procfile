@@ -1,1 +1,1 @@
-web: gunicorn stock_market.wsgi:application --bind 0.0.0.0:$PORT
+web: gunicorn stock_market.wsgi:application --bind 0.0.0.0:$PORT -w 1

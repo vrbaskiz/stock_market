@@ -14,8 +14,8 @@ from stock_analyzer_app.stock_manager import get_stock_manager
 
 # API View for Market Data
 @extend_schema(
-    summary="Retrieve cached real-time market data (Trades/Quotes)",
-    description="Fetches the latest real-time trade or quote data for a "
+    summary="Retrieve cached real-time market data (Trades)",
+    description="Fetches the latest real-time trade data for a "
                 "specified symbol from in-memory cache, or all cached data "
                 "if no symbol is provided. Data is streamed "
                 "from Finnhub WebSockets.",
@@ -32,7 +32,7 @@ from stock_analyzer_app.stock_manager import get_stock_manager
     responses={
         200: {
             'description': 'Successful retrieval of market data. Data '
-                           'represents the latest real-time trade or quote.',
+                           'represents the latest real-time trade.',
         },
         404: {
             'description': 'Data not found for the specified symbol.',
