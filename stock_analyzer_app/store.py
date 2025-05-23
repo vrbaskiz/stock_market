@@ -46,7 +46,7 @@ class DataStore:
             if cls._instance is None:
                 cls._instance = super(DataStore, cls).__new__(cls)
                 # Stores latest market data (trades) for each symbol
-                cls._instance.data = dict()
+                cls._instance.data = {}
                 cls._instance.data_lock = threading.Lock()
 
                 # Stores historical insights (significant price changes)
@@ -63,6 +63,7 @@ class DataStore:
         """
         symbol = symbol.upper()
         with self.data_lock:
+            logger.info(f"INSIDE STORE data: {self.data}, instance {self} ")
             self.data[symbol] = data
             logger.debug(f"Updated data for {symbol}: {data}")
 
@@ -72,6 +73,7 @@ class DataStore:
         """
         with self.data_lock:
             if symbol:
+                logger.info(f"INSIDE STORE data: {self.data}, instance {self} ")
                 return self.data.get(symbol.upper(), {})
             return dict(self.data) # Return a copy of all data
 
