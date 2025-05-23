@@ -100,7 +100,7 @@ class DataStore:
             )
 
 
-def get_filtered_insights(
+    def get_filtered_insights(
             self,
             symbol: str = None,
             from_timestamp: int = None,
