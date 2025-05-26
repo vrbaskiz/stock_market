@@ -30,6 +30,7 @@ class Insight:
             "price_change": self.price_change,
             "event_timestamp_ms": self.event_timestamp_ms,
             "event_datetime_utc": time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime(self.event_timestamp_ms / 1000)),
+            "message": self.message
         }
 
 class DataStore:
