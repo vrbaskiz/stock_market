@@ -2,6 +2,7 @@ import threading
 import json
 import websocket
 import ssl
+import time
 import logging
 
 from django.conf import settings
@@ -28,6 +29,11 @@ class StockManager:
     """
     _instance = None
     _lock = threading.Lock()
+
+    RECONNECT_INITIAL_DELAY = 5    # seconds for first retry
+    RECONNECT_MAX_DELAY = 60       # seconds for maximum retry delay
+    MAX_RECONNECT_ATTEMPTS = 100   # Maximum number of reconnection attempts
+
 
     def __new__(cls, api_key: str):
         with cls._lock:
@@ -167,7 +173,6 @@ class StockManager:
         logger.info(
             f"Finnhub WS Closed: {close_status_code} - {close_message}"
         )
-        self.running = False
 
     def _on_open(self, ws):
         """Callback for when the WebSocket connection is opened."""
@@ -181,21 +186,55 @@ class StockManager:
         Runs the WebSocketApp in a dedicated thread.
         This method blocks until the WebSocket connection closes.
         """
-        try:
-            self.ws_app = websocket.WebSocketApp(
-                self.fh_ws_url,
-                on_message=self._on_message,
-                on_error=self._on_error,
-                on_close=self._on_close,
-                on_open=self._on_open
-            )
-            logger.info("Starting Finnhub WebSocketApp run_forever...")
-            self.ws_app.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
-            logger.info("Finnhub WebSocketApp run_forever exited.")
-        except Exception as e:
-            logger.critical(f"Critical error in Finnhub WebSocket thread: {e}")
-        finally:
-            self.running = False
+        reconnect_attempt = 0
+        current_delay = self.RECONNECT_INITIAL_DELAY
+        while self.running:
+            try:
+                self.ws_app = websocket.WebSocketApp(
+                    self.fh_ws_url,
+                    on_message=self._on_message,
+                    on_error=self._on_error,
+                    on_close=self._on_close,
+                    on_open=self._on_open
+                )
+                logger.info(
+                    f"Attempting WS connection "
+                    f"(Attempt {reconnect_attempt + 1})..."
+                )
+                self.ws_app.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+                logger.info("Finnhub WebSocketApp run_forever exited.")
+                if not self.running:
+                    logger.info(
+                        "StockManager intentionally stopped. "
+                        "Exiting reconnection loop."
+                    )
+                    break
+
+                # If we reach here,  connection was lost
+                reconnect_attempt += 1
+                if reconnect_attempt > self.MAX_RECONNECT_ATTEMPTS:
+                    logger.critical(
+                        f"Maximum reconnection attempts "
+                        f"({self.MAX_RECONNECT_ATTEMPTS}) reached. Giving up."
+                    )
+                    self.running = False
+                    break
+
+                # Apply exponential backoff delay before next retry
+                logger.warning(
+                    f"WS disconnected unexpectedly. "
+                    f"Reconnecting in {current_delay}s "
+                    f"(Attempt {reconnect_attempt})..."
+                )
+                time.sleep(current_delay)
+                current_delay = min(
+                    current_delay * 2, self.RECONNECT_MAX_DELAY
+                )
+
+            except Exception as e:
+                logger.critical(f"Critical error in Finnhub WebSocket thread: {e}")
+            finally:
+                self.running = False
 
     def start(self):
         """Starts the Finnhub WebSocket client in a new daemon thread."""
@@ -209,10 +248,12 @@ class StockManager:
 
     def stop(self):
         """Stops the Finnhub WebSocket client."""
-        if self.running and self.ws_app:
+        if self.running:
             logger.info("Stopping StockManager...")
             self.running = False
-            self.ws_app.close()
+            if self.ws_app:
+                logger.info("Closing WebSocket connection...")
+                self.ws_app.close()
             if self.thread:
                 self.thread.join(timeout=5)
                 if self.thread.is_alive():

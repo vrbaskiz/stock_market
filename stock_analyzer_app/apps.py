@@ -9,5 +9,3 @@ class StockAnalyzerAppConfig(AppConfig):
         # import stock_analyzer_app.stock_manager as sm
 
         print("AppConfig ready(): Starting PolygonWebSocketManager...")
-        # Call the singleton accessor; it will initiate and start the manager
-        # sm.get_stock_manager()
