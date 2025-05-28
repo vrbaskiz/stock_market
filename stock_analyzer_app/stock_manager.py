@@ -212,13 +212,16 @@ class StockManager:
 
                 # If we reach here,  connection was lost
                 reconnect_attempt += 1
-                if reconnect_attempt > self.MAX_RECONNECT_ATTEMPTS:
-                    logger.critical(
-                        f"Maximum reconnection attempts "
-                        f"({self.MAX_RECONNECT_ATTEMPTS}) reached. Giving up."
-                    )
-                    self.running = False
-                    break
+                # commented out just because of my incorrect expectation
+                # of how many times it should try to reconnect
+                # and how long stock market could be down, lose connection
+                # if reconnect_attempt > self.MAX_RECONNECT_ATTEMPTS:
+                #     logger.critical(
+                #         f"Maximum reconnection attempts "
+                #         f"({self.MAX_RECONNECT_ATTEMPTS}) reached. Giving up."
+                #     )
+                #     self.running = False
+                #     break
 
                 # Apply exponential backoff delay before next retry
                 logger.warning(
@@ -232,9 +235,13 @@ class StockManager:
                 )
 
             except Exception as e:
-                logger.critical(f"Critical error in Finnhub WebSocket thread: {e}")
-            finally:
-                self.running = False
+                logger.error(
+                    f"Critical error in Finnhub WebSocket thread: {e}"
+                )
+            # I want to try to reconnect even if there is an error
+            # also changed log above to be error since I know error level shows
+            # finally:
+            #     self.running = False
 
     def start(self):
         """Starts the Finnhub WebSocket client in a new daemon thread."""
